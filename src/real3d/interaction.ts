@@ -4,15 +4,6 @@ import type { PieceHoverController } from './hover';
 
 const pieceCodes = new Set(['K', 'Q', 'R', 'B', 'N', 'P', 'k', 'q', 'r', 'b', 'n', 'p']);
 
-type DragState = {
-  piece: THREE.Mesh;
-  pointerId: number;
-  startPosition: THREE.Vector3;
-  startClientX: number;
-  startClientY: number;
-  hasMoved: boolean;
-};
-
 type SetupPieceInteractionParams = {
   scene: THREE.Scene;
   camera: THREE.Camera;
@@ -39,7 +30,6 @@ export function setupPieceInteraction({
   const pointerNdc = new THREE.Vector2();
   const boardPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   const boardPoint = new THREE.Vector3();
-  const dragThresholdPx = 4;
   const lastMoveFromHighlight = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({
@@ -71,7 +61,6 @@ export function setupPieceInteraction({
   scene.add(lastMoveFromHighlight);
   scene.add(lastMoveToHighlight);
 
-  let dragState: DragState | null = null;
   let selectedPiece: THREE.Mesh | null = null;
   let activeMouseButton: number | null = null;
   let hoverDisabledForOrbit = false;
@@ -226,10 +215,6 @@ export function setupPieceInteraction({
   }
 
   function moveProgrammatically(fromX: number, fromZ: number, toX: number, toZ: number): boolean {
-    if (dragState) {
-      return false;
-    }
-
     const sourceX = getSquareCoordinate(fromX);
     const sourceZ = getSquareCoordinate(fromZ);
     const targetX = getSquareCoordinate(toX);
@@ -304,80 +289,6 @@ export function setupPieceInteraction({
     return true;
   }
 
-  function dragPieceToPointer(event: PointerEvent) {
-    if (!dragState) {
-      return;
-    }
-
-    updatePointerNdc(event);
-    pointerRaycaster.setFromCamera(pointerNdc, camera);
-    const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
-    if (!hasBoardIntersection || !isWithinBoard(boardPoint.x, boardPoint.z)) {
-      return;
-    }
-
-    dragState.piece.position.x = boardPoint.x;
-    dragState.piece.position.z = boardPoint.z;
-    dragState.piece.position.y = dragState.startPosition.y + 0.2;
-  }
-
-  function finishDrag(event: PointerEvent) {
-    if (!dragState || event.pointerId !== dragState.pointerId) {
-      return;
-    }
-
-    const { piece, startPosition } = dragState;
-
-    if (!dragState.hasMoved) {
-      piece.position.copy(startPosition);
-      piece.position.y = startPosition.y;
-      dragState = null;
-      hoverController.setDraggedPiece(null);
-      hoverController.setIgnoredPiece(null);
-      controls.enabled = true;
-      hoverController.setEnabled(true);
-
-      if (selectedPiece === piece) {
-        clearSelection();
-      } else {
-        selectPiece(piece);
-      }
-
-      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
-        renderer.domElement.releasePointerCapture(event.pointerId);
-      }
-
-      return;
-    }
-
-    updatePointerNdc(event);
-    pointerRaycaster.setFromCamera(pointerNdc, camera);
-    const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
-
-    let dropApplied = false;
-    if (hasBoardIntersection && isWithinBoard(boardPoint.x, boardPoint.z)) {
-      const targetX = getSquareCoordinate(boardPoint.x);
-      const targetZ = getSquareCoordinate(boardPoint.z);
-      dropApplied = applyMoveOrCapture(piece, targetX, targetZ, startPosition.x, startPosition.z);
-    }
-
-    if (!dropApplied) {
-      piece.position.copy(startPosition);
-    }
-
-    piece.position.y = startPosition.y;
-    hoverController.setDraggedPiece(null);
-    clearSelection();
-    dragState = null;
-    hoverController.setIgnoredPiece(null);
-    controls.enabled = true;
-    hoverController.setEnabled(true);
-
-    if (renderer.domElement.hasPointerCapture(event.pointerId)) {
-      renderer.domElement.releasePointerCapture(event.pointerId);
-    }
-  }
-
   renderer.domElement.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) {
       return;
@@ -414,56 +325,20 @@ export function setupPieceInteraction({
     event.preventDefault();
     event.stopPropagation();
 
-    dragState = {
-      piece,
-      pointerId: event.pointerId,
-      startPosition: piece.position.clone(),
-      startClientX: event.clientX,
-      startClientY: event.clientY,
-      hasMoved: false,
-    };
-    controls.enabled = false;
-    hoverController.setIgnoredPiece(piece);
-    hoverController.updateFromPointerEvent(event);
-    renderer.domElement.setPointerCapture(event.pointerId);
+    if (selectedPiece === piece) {
+      clearSelection();
+      return;
+    }
+
+    selectPiece(piece);
   }, { capture: true });
 
-  renderer.domElement.addEventListener('pointermove', (event) => {
-    if (!dragState || event.pointerId !== dragState.pointerId) {
-      return;
-    }
-
-    hoverController.updateFromPointerEvent(event);
-
-    if (!dragState.hasMoved) {
-      const deltaX = event.clientX - dragState.startClientX;
-      const deltaY = event.clientY - dragState.startClientY;
-      const movement = Math.hypot(deltaX, deltaY);
-      if (movement < dragThresholdPx) {
-        return;
-      }
-
-      dragState.hasMoved = true;
-      if (selectedPiece === dragState.piece) {
-        clearSelection();
-      }
-      hoverController.setDraggedPiece(dragState.piece);
-    }
-
-    dragPieceToPointer(event);
-  });
-
   renderer.domElement.addEventListener('pointerup', (event) => {
-    if (dragState && event.pointerId === dragState.pointerId) {
-      finishDrag(event);
-      return;
-    }
-
     handleSelectedPieceClickTarget(event);
   });
 
-  renderer.domElement.addEventListener('pointercancel', (event) => {
-    finishDrag(event);
+  renderer.domElement.addEventListener('pointercancel', () => {
+    activeMouseButton = null;
   });
 
   renderer.domElement.addEventListener('pointerdown', (event) => {
@@ -471,10 +346,6 @@ export function setupPieceInteraction({
   });
 
   renderer.domElement.addEventListener('pointerup', () => {
-    activeMouseButton = null;
-  });
-
-  renderer.domElement.addEventListener('pointercancel', () => {
     activeMouseButton = null;
   });
 
