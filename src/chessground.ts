@@ -51,9 +51,8 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
     return state;
   }
 
-  console.log('Chessground initialized with config:', config);
   if (config?.real3D) {
-    return start3D(element);
+    return start3D(element, config);
   } else {
     return start(redrawAll(), redrawAll);
   }

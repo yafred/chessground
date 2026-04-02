@@ -3,8 +3,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { fenToScene } from './fen.js';
 import { Api } from '../api';
+import { Config } from '../config.js';
 
-export function start3D(sceneRoot: HTMLElement): Api {
+export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
 
     // Scene setup
     const scene = new THREE.Scene();
@@ -72,7 +73,7 @@ export function start3D(sceneRoot: HTMLElement): Api {
             }
         });
 
-        fenToScene(defaultFen, scene, pieces, materials);
+        fenToScene(config?.fen || defaultFen, scene, pieces, materials);
         scene.visible = true;
     });
 
@@ -98,12 +99,9 @@ export function start3D(sceneRoot: HTMLElement): Api {
         state: {} as any, // No internal state needed for now
 
         set(config) {
-            if (config.real3D === false) {
-                console.warn('Switching back to 2D mode is not supported in this implementation.');
-            }
-            if (config.animation?.duration !== undefined) {
-                console.warn('Animation configuration is not supported in this implementation.');
-            }
+            if (config.fen) {
+                fenToScene(config.fen, scene, pieces, materials);
+            } 
         },
 
         getFen() {
