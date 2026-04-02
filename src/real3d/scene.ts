@@ -8,7 +8,7 @@ import { createPieceHoverController } from './hover.js';
 import { setupPieceInteraction } from './interaction.js';
 import { Key } from '../types.js';
 
-export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
+export function start3D(sceneRoot: HTMLElement, config: Config): Api {
 
     // Scene setup
     const scene = new THREE.Scene();
@@ -20,7 +20,7 @@ export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
     const pieces = new Map();
 
 
-    const sceneAssetUrl = "https://yafred.github.io/chess3D/scene.glb";
+    const sceneAssetUrl = config.real3D!.sceneAssetUrl; // config.real3D is the reason we are here.
     const defaultFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
 
     // Camera
