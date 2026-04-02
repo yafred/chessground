@@ -4,6 +4,8 @@ import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { fenToScene } from './fen.js';
 import { Api } from '../api';
 import { Config } from '../config.js';
+import { createPieceHoverController } from './hover.js';
+import { setupPieceInteraction } from './interaction.js';
 
 export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
 
@@ -57,7 +59,18 @@ export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
         renderer.setSize(width, height);
     });
 
+    // Set up piece hover and interaction
+    const hoverController = createPieceHoverController(scene, camera, renderer.domElement);
+    sceneRoot.addEventListener('pointermove', hoverController.updateFromPointerEvent);
 
+    // Set up interactions
+    setupPieceInteraction({
+        scene,
+        camera,
+        renderer,
+        controls,
+        hoverController,
+    });
 
     // Load the scene and pieces
     loader.load(sceneAssetUrl, (gltf: GLTF) => {
@@ -79,6 +92,7 @@ export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
 
     // Main loop
     function animate() {
+        hoverController.update();
         requestAnimationFrame(animate);
         controls.update();
         renderer.render(scene, camera);
@@ -87,7 +101,7 @@ export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
 
 
     // Utils
-     function getSceneRootSize() {
+    function getSceneRootSize() {
         return {
             width: sceneRoot.clientWidth || window.innerWidth,
             height: sceneRoot.clientHeight || window.innerHeight,
@@ -101,7 +115,7 @@ export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
         set(config) {
             if (config.fen) {
                 fenToScene(config.fen, scene, pieces, materials);
-            } 
+            }
         },
 
         getFen() {
