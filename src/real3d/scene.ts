@@ -6,6 +6,7 @@ import { Api } from '../api';
 import { Config } from '../config.js';
 import { createPieceHoverController } from './hover.js';
 import { setupPieceInteraction } from './interaction.js';
+import { Key } from '../types.js';
 
 export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
 
@@ -64,13 +65,22 @@ export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
     sceneRoot.addEventListener('pointermove', hoverController.updateFromPointerEvent);
 
     // Set up interactions
-    setupPieceInteraction({
+    const interactionController = setupPieceInteraction({
         scene,
         camera,
         renderer,
         controls,
         hoverController,
     });
+
+    if (config?.events?.move) {
+        interactionController.setMoveAttemptCallback((uci) => {
+            const from = uci.slice(0, 2) as Key;
+            const to = uci.slice(2, 4) as Key;
+            config.events?.move?.(from, to);
+            return true; // allow all moves for now
+        });
+    }
 
     // Load the scene and pieces
     loader.load(sceneAssetUrl, (gltf: GLTF) => {
