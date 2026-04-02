@@ -7,6 +7,7 @@ import { defaults, type HeadlessState, type State } from './state.js';
 import * as svg from './svg.js';
 import * as util from './util.js';
 import { renderWrap } from './wrap.js';
+import { start3D } from './real3d/scene.js';
 
 export function initModule({ el, config }: { el: HTMLElement; config?: Config }): Api {
   return Chessground(el, config);
@@ -50,7 +51,12 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
     return state;
   }
 
-  return start(redrawAll(), redrawAll);
+  console.log('Chessground initialized with config:', config);
+  if (config?.real3D) {
+    return start3D(element);
+  } else {
+    return start(redrawAll(), redrawAll);
+  }
 }
 
 function debounceRedraw(redrawNow: (skipSvg?: boolean) => void): () => void {

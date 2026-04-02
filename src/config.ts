@@ -5,6 +5,7 @@ import { type HeadlessState } from './state.js';
 import type * as cg from './types.js';
 
 export interface Config {
+  real3D?: boolean; // whether to use the real 3D rendering engine (i.e. with perspective) instead of the 2D one with fake 3D effects; false by default
   fen?: cg.FEN; // chess position in Forsyth notation
   orientation?: cg.Color; // board orientation. white | black
   turnColor?: cg.Color; // turn to play. white | black
