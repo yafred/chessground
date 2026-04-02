@@ -97,6 +97,7 @@ export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
         });
 
         fenToScene(config?.fen || defaultFen, scene, pieces, materials);
+        interactionController.setLastMoveSquares(config?.lastMove);
         scene.visible = true;
     });
 
@@ -123,6 +124,10 @@ export function start3D(sceneRoot: HTMLElement, config?: Config): Api {
         state: {} as any, // No internal state needed for now
 
         set(config) {
+            if ('lastMove' in config) {
+                interactionController.setLastMoveSquares(config.lastMove);
+            }
+
             if (config.fen) {
                 fenToScene(config.fen, scene, pieces, materials);
             }

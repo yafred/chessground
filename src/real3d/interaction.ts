@@ -25,6 +25,7 @@ type SetupPieceInteractionParams = {
 export type PieceInteractionController = {
   moveProgrammatically: (fromX: number, fromZ: number, toX: number, toZ: number) => boolean;
   moveProgrammaticallyBySquare: (from: string, to: string) => boolean;
+  setLastMoveSquares: (squares?: readonly string[]) => void;
   setMoveAttemptCallback: (callback: (uci: string) => boolean) => void; // Set callback for validating user moves
 };
 
@@ -158,6 +159,40 @@ export function setupPieceInteraction({
     lastMoveToHighlight.position.z = toZ;
     lastMoveFromHighlight.visible = true;
     lastMoveToHighlight.visible = true;
+  }
+
+  function clearLastMoveHighlights() {
+    lastMoveFromHighlight.visible = false;
+    lastMoveToHighlight.visible = false;
+  }
+
+  function setLastMoveSquares(squares?: readonly string[]) {
+    if (!squares || squares.length === 0) {
+      clearLastMoveHighlights();
+      return;
+    }
+
+    const from = parseSquare(squares[0]);
+    if (!from) {
+      clearLastMoveHighlights();
+      return;
+    }
+
+    if (squares.length === 1) {
+      lastMoveFromHighlight.visible = false;
+      lastMoveToHighlight.position.x = from.x;
+      lastMoveToHighlight.position.z = from.z;
+      lastMoveToHighlight.visible = true;
+      return;
+    }
+
+    const to = parseSquare(squares[1]);
+    if (!to) {
+      clearLastMoveHighlights();
+      return;
+    }
+
+    setLastMoveHighlights(from.x, from.z, to.x, to.z);
   }
 
   function getPieceUnderPointer(event: PointerEvent): THREE.Mesh | null {
@@ -496,6 +531,7 @@ export function setupPieceInteraction({
   return {
     moveProgrammatically,
     moveProgrammaticallyBySquare,
+    setLastMoveSquares,
     setMoveAttemptCallback,
   };
 }
