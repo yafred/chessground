@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import type * as THREE from 'three';
 
 const pieceMap: { [key: string]: string } = {
   P: 'Pawn',
@@ -29,7 +29,7 @@ export function fenToScene(
     let c = 0;
     for (const char of rows[r]) {
       if (char >= '1' && char <= '8') {
-        c += parseInt(char);
+        c += Number.parseInt(char, 10);
       } else {
         const pieceMesh = pieces.get(pieceMap[char.toUpperCase()]);
 

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import type { PieceHoverController } from './hover';
 
@@ -45,7 +45,7 @@ export function setupPieceInteraction({
   const lastMoveFromHighlight = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({
-      color: 0xffe45c,
+      color: 0xff_e4_5c,
       transparent: true,
       opacity: 0.35,
       depthWrite: false,
@@ -55,7 +55,7 @@ export function setupPieceInteraction({
   const lastMoveToHighlight = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({
-      color: 0xffe45c,
+      color: 0xff_e4_5c,
       transparent: true,
       opacity: 0.4,
       depthWrite: false,

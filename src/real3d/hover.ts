@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 
 const pieceCodes = new Set(['K', 'Q', 'R', 'B', 'N', 'P', 'k', 'q', 'r', 'b', 'n', 'p']);
-const hoverHighlightColor = new THREE.Color(0x8fd3ff);
-const pinnedHighlightColor = new THREE.Color(0x2f6fff);
+const hoverHighlightColor = new THREE.Color(0x8f_d3_ff);
+const pinnedHighlightColor = new THREE.Color(0x2f_6f_ff);
 
 type HighlightMode = 'hover' | 'pinned' | 'drag';
 
@@ -73,7 +73,7 @@ export function createPieceHoverController(
   const squareHighlight = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({
-      color: 0xf7e27f,
+      color: 0xf7_e2_7f,
       transparent: true,
       opacity: 0.35,
       depthWrite: false,

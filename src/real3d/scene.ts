@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-import { Api } from '../api';
-import { Config } from '../config.js';
-import { Key } from '../types.js';
+import type { Api } from '../api';
+import type { Config } from '../config.js';
+import type { Key } from '../types.js';
 
 import { fenToScene } from './fen.js';
 import { createPieceHoverController } from './hover.js';
@@ -14,7 +14,7 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   // Scene setup
   const scene = new THREE.Scene();
   scene.visible = false;
-  scene.background = new THREE.Color(0x404040);
+  scene.background = new THREE.Color(0x40_40_40);
 
   const loader = new GLTFLoader();
   const materials = new Map();
@@ -41,13 +41,13 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   controls.dampingFactor = 0.05;
 
   // Lighting
-  const ambientLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
+  const ambientLight = new THREE.HemisphereLight(0xff_ff_ff, 0x44_44_44, 2);
   scene.add(ambientLight);
-  const light = new THREE.DirectionalLight(0xffffff, 0.5);
+  const light = new THREE.DirectionalLight(0xff_ff_ff, 0.5);
   light.position.set(0, 1, 1);
   light.target.position.set(0, 0, 0);
   scene.add(light);
-  const light2 = new THREE.DirectionalLight(0xffffff, 0.5);
+  const light2 = new THREE.DirectionalLight(0xff_ff_ff, 0.5);
   light2.position.set(0, 1, -1);
   light2.target.position.set(0, 0, 0);
   scene.add(light2);
