@@ -35,7 +35,7 @@
     "lint:fix": "oxlint --fix",
     "format": "oxfmt",
     "check-format": "oxfmt --check",
-    "bundle": "esbuild src/chessground.ts --bundle --format=esm --outfile=dist/chessground.min.js --minify",
+    "bundle": "esbuild src/chessground.ts --bundle --format=esm --outfile=dist/chessground.min.js --minify --external:three --external:three/examples/jsm/*",
     "dist": "$npm_execpath run compile && $npm_execpath run bundle",
     "test": "vitest run",
     "test:watch": "vitest"
