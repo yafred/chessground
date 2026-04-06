@@ -41,7 +41,7 @@ function getPieceMeshFromObject(object: THREE.Object3D | null): THREE.Mesh | nul
 
 function getPieceAtSquare(scene: THREE.Scene, x: number, z: number): THREE.Mesh | null {
   let pieceAtSquare: THREE.Mesh | null = null;
-  scene.traverse((obj) => {
+  scene.traverse(obj => {
     if (pieceAtSquare || !(obj instanceof THREE.Mesh) || !pieceCodes.has(obj.name)) {
       return;
     }

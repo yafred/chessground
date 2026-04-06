@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
 import type { PieceHoverController } from './hover';
 
 const pieceCodes = new Set(['K', 'Q', 'R', 'B', 'N', 'P', 'k', 'q', 'r', 'b', 'n', 'p']);
@@ -107,7 +108,7 @@ export function setupPieceInteraction({
   function getPieceAtSquare(x: number, z: number, ignorePiece?: THREE.Mesh): THREE.Mesh | null {
     let pieceAtSquare: THREE.Mesh | null = null;
 
-    scene.traverse((obj) => {
+    scene.traverse(obj => {
       if (pieceAtSquare || !(obj instanceof THREE.Mesh) || !pieceCodes.has(obj.name) || obj === ignorePiece) {
         return;
       }
@@ -413,57 +414,61 @@ export function setupPieceInteraction({
     }
   }
 
-  renderer.domElement.addEventListener('pointerdown', (event) => {
-    if (event.button !== 0) {
-      return;
-    }
+  renderer.domElement.addEventListener(
+    'pointerdown',
+    event => {
+      if (event.button !== 0) {
+        return;
+      }
 
-    const piece = getPieceUnderPointer(event);
-    if (!piece) {
-      if (selectedPiece) {
+      const piece = getPieceUnderPointer(event);
+      if (!piece) {
+        if (selectedPiece) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        return;
+      }
+
+      // If a piece is pinned, clicking another piece should act as a click target,
+      // not start a drag on the clicked piece.
+      if (selectedPiece && piece !== selectedPiece) {
         event.preventDefault();
         event.stopPropagation();
-      }
-      return;
-    }
 
-    // If a piece is pinned, clicking another piece should act as a click target,
-    // not start a drag on the clicked piece.
-    if (selectedPiece && piece !== selectedPiece) {
+        if (isOppositeColor(selectedPiece, piece)) {
+          const targetX = piece.position.x;
+          const targetZ = piece.position.z;
+          if (applyMoveOrCapture(selectedPiece, targetX, targetZ)) {
+            clearSelection();
+            return;
+          }
+        }
+
+        selectPiece(piece);
+        return;
+      }
+
       event.preventDefault();
       event.stopPropagation();
 
-      if (isOppositeColor(selectedPiece, piece)) {
-        const targetX = piece.position.x;
-        const targetZ = piece.position.z;
-        if (applyMoveOrCapture(selectedPiece, targetX, targetZ)) {
-          clearSelection();
-          return;
-        }
-      }
+      dragState = {
+        piece,
+        pointerId: event.pointerId,
+        startPosition: piece.position.clone(),
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        hasMoved: false,
+      };
+      controls.enabled = false;
+      hoverController.setIgnoredPiece(piece);
+      hoverController.updateFromPointerEvent(event);
+      renderer.domElement.setPointerCapture(event.pointerId);
+    },
+    { capture: true },
+  );
 
-      selectPiece(piece);
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    dragState = {
-      piece,
-      pointerId: event.pointerId,
-      startPosition: piece.position.clone(),
-      startClientX: event.clientX,
-      startClientY: event.clientY,
-      hasMoved: false,
-    };
-    controls.enabled = false;
-    hoverController.setIgnoredPiece(piece);
-    hoverController.updateFromPointerEvent(event);
-    renderer.domElement.setPointerCapture(event.pointerId);
-  }, { capture: true });
-
-  renderer.domElement.addEventListener('pointermove', (event) => {
+  renderer.domElement.addEventListener('pointermove', event => {
     if (!dragState || event.pointerId !== dragState.pointerId) {
       return;
     }
@@ -488,7 +493,7 @@ export function setupPieceInteraction({
     dragPieceToPointer(event);
   });
 
-  renderer.domElement.addEventListener('pointerup', (event) => {
+  renderer.domElement.addEventListener('pointerup', event => {
     if (dragState && event.pointerId === dragState.pointerId) {
       finishDrag(event);
       return;
@@ -497,11 +502,11 @@ export function setupPieceInteraction({
     handleSelectedPieceClickTarget(event);
   });
 
-  renderer.domElement.addEventListener('pointercancel', (event) => {
+  renderer.domElement.addEventListener('pointercancel', event => {
     finishDrag(event);
   });
 
-  renderer.domElement.addEventListener('pointerdown', (event) => {
+  renderer.domElement.addEventListener('pointerdown', event => {
     activeMouseButton = event.pointerType === 'mouse' ? event.button : null;
   });
 

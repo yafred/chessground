@@ -7,7 +7,7 @@ import type * as cg from './types.js';
 export interface Config {
   real3D?: {
     sceneAssetUrl: string; // URL of the 3D scene asset in glTF format
-  }
+  };
   fen?: cg.FEN; // chess position in Forsyth notation
   orientation?: cg.Color; // board orientation. white | black
   turnColor?: cg.Color; // turn to play. white | black
