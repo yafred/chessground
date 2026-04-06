@@ -44,9 +44,9 @@
     "/dist/*.js",
     "/dist/*.d.ts",
     "/dist/*.js.map",
-    "/dist/real3D/*.js",
-    "/dist/real3D/*.d.ts",
-    "/dist/real3D/*.js.map",
+    "/dist/real3d/*.js",
+    "/dist/real3d/*.d.ts",
+    "/dist/real3d/*.js.map",
     "/assets/*.css",
     "/src/*.ts"
   ],
