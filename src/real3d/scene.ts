@@ -82,6 +82,20 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
     });
   }
 
+  function setAllowInteractionForColors(config: Config) {
+    if (config?.turnColor) {
+      const isWhiteTurn = config.turnColor === 'white';
+      const isMyTurn =
+        (isWhiteTurn && config.movable?.color === 'white') ||
+        (!isWhiteTurn && config.movable?.color === 'black') ||
+        config.movable?.color === 'both';
+      interactionController.setAllowWhiteInteraction(isWhiteTurn && isMyTurn);
+      interactionController.setAllowBlackInteraction(!isWhiteTurn && isMyTurn);
+    }
+  }
+
+  setAllowInteractionForColors(config);
+
   // Load the scene and pieces
   loader.load(sceneAssetUrl, (gltf: GLTF) => {
     scene.add(gltf.scene);
@@ -137,6 +151,8 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
       if (config.fen) {
         fenToScene(config.fen, scene, pieces, materials);
       }
+
+      setAllowInteractionForColors(config);
     },
 
     getFen() {

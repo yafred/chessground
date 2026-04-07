@@ -20,6 +20,8 @@ type SetupPieceInteractionParams = {
   renderer: THREE.WebGLRenderer;
   controls: OrbitControls;
   hoverController: PieceHoverController;
+  allowWhiteInteraction?: boolean;
+  allowBlackInteraction?: boolean;
   onMoveAttempt?: (uci: string) => boolean; // Validate move in UCI form; return true if valid
 };
 
@@ -28,6 +30,8 @@ export type PieceInteractionController = {
   moveProgrammaticallyBySquare: (from: string, to: string) => boolean;
   setLastMoveSquares: (squares?: readonly string[]) => void;
   setMoveAttemptCallback: (callback: (uci: string) => boolean) => void; // Set callback for validating user moves
+  setAllowWhiteInteraction: (allow: boolean) => void;
+  setAllowBlackInteraction: (allow: boolean) => void;
 };
 
 export function setupPieceInteraction({
@@ -36,6 +40,8 @@ export function setupPieceInteraction({
   renderer,
   controls,
   hoverController,
+  allowWhiteInteraction: initialAllowWhiteInteraction = true,
+  allowBlackInteraction: initialAllowBlackInteraction = true,
 }: SetupPieceInteractionParams): PieceInteractionController {
   const pointerRaycaster = new THREE.Raycaster();
   const pointerNdc = new THREE.Vector2();
@@ -78,6 +84,8 @@ export function setupPieceInteraction({
   let activeMouseButton: number | null = null;
   let hoverDisabledForOrbit = false;
   let onMoveAttempt: ((uci: string) => boolean) | undefined = undefined;
+  let allowWhiteInteraction = initialAllowWhiteInteraction;
+  let allowBlackInteraction = initialAllowBlackInteraction;
 
   function getPieceMeshFromObject(object: THREE.Object3D | null): THREE.Mesh | null {
     let current: THREE.Object3D | null = object;
@@ -128,6 +136,12 @@ export function setupPieceInteraction({
   function isOppositeColor(a: THREE.Mesh, b: THREE.Mesh): boolean {
     return isWhitePiece(a) !== isWhitePiece(b);
   }
+
+  function canInteractWithPiece(piece: THREE.Mesh): boolean {
+    return isWhitePiece(piece) ? allowWhiteInteraction : allowBlackInteraction;
+  }
+
+  hoverController.setPieceHighlightFilter(canInteractWithPiece);
 
   function parseSquare(square: string): { x: number; z: number } | null {
     const normalized = square.trim().toLowerCase();
@@ -216,6 +230,10 @@ export function setupPieceInteraction({
   }
 
   function selectPiece(piece: THREE.Mesh) {
+    if (!canInteractWithPiece(piece)) {
+      return;
+    }
+
     selectedPiece = piece;
     hoverController.setPinnedPiece(piece);
   }
@@ -259,6 +277,22 @@ export function setupPieceInteraction({
 
   function setMoveAttemptCallback(callback: (uci: string) => boolean) {
     onMoveAttempt = callback;
+  }
+
+  function setAllowWhiteInteraction(allow: boolean) {
+    allowWhiteInteraction = allow;
+    hoverController.setPieceHighlightFilter(canInteractWithPiece);
+    if (selectedPiece && !canInteractWithPiece(selectedPiece)) {
+      clearSelection();
+    }
+  }
+
+  function setAllowBlackInteraction(allow: boolean) {
+    allowBlackInteraction = allow;
+    hoverController.setPieceHighlightFilter(canInteractWithPiece);
+    if (selectedPiece && !canInteractWithPiece(selectedPiece)) {
+      clearSelection();
+    }
   }
 
   function moveProgrammatically(fromX: number, fromZ: number, toX: number, toZ: number): boolean {
@@ -320,6 +354,10 @@ export function setupPieceInteraction({
           clearSelection();
           return true;
         }
+      }
+
+      if (!canInteractWithPiece(targetPiece)) {
+        return true;
       }
 
       selectPiece(targetPiece);
@@ -427,6 +465,10 @@ export function setupPieceInteraction({
           event.preventDefault();
           event.stopPropagation();
         }
+        return;
+      }
+
+      if (!canInteractWithPiece(piece)) {
         return;
       }
 
@@ -538,5 +580,7 @@ export function setupPieceInteraction({
     moveProgrammaticallyBySquare,
     setLastMoveSquares,
     setMoveAttemptCallback,
+    setAllowWhiteInteraction,
+    setAllowBlackInteraction,
   };
 }

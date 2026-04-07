@@ -13,6 +13,7 @@ export type PieceHoverController = {
   setDraggedPiece: (piece: THREE.Mesh | null) => void;
   setPinnedPiece: (piece: THREE.Mesh | null) => void;
   setIgnoredPiece: (piece: THREE.Mesh | null) => void;
+  setPieceHighlightFilter: (filter: (piece: THREE.Mesh) => boolean) => void;
 };
 
 function getColorMaterial(mesh: THREE.Mesh): (THREE.Material & { color: THREE.Color }) | null {
@@ -70,6 +71,7 @@ export function createPieceHoverController(
   let draggedPiece: THREE.Mesh | null = null;
   let pinnedPiece: THREE.Mesh | null = null;
   let ignoredPiece: THREE.Mesh | null = null;
+  let pieceHighlightFilter: (piece: THREE.Mesh) => boolean = () => true;
   const squareHighlight = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({
@@ -158,6 +160,12 @@ export function createPieceHoverController(
     setIgnoredPiece(piece: THREE.Mesh | null) {
       ignoredPiece = piece;
     },
+    setPieceHighlightFilter(filter: (piece: THREE.Mesh) => boolean) {
+      pieceHighlightFilter = filter;
+      if (hovered && !pieceHighlightFilter(hovered)) {
+        clearHoveredState();
+      }
+    },
     updateFromPointerEvent(event: PointerEvent) {
       const rect = domElement.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -197,6 +205,9 @@ export function createPieceHoverController(
         if (candidate && ignoredPiece && candidate === ignoredPiece) {
           continue;
         }
+        if (candidate && !pieceHighlightFilter(candidate)) {
+          continue;
+        }
         if (candidate) {
           hitPiece = candidate;
           break;
@@ -216,7 +227,12 @@ export function createPieceHoverController(
           squareHighlight.position.z = Math.round(boardPoint.z + 3.5) - 3.5;
           squareHighlight.visible = true;
           hasHighlightedSquare = true;
-          targetPiece = getPieceAtSquare(scene, squareHighlight.position.x, squareHighlight.position.z);
+          const pieceAtSquare = getPieceAtSquare(
+            scene,
+            squareHighlight.position.x,
+            squareHighlight.position.z,
+          );
+          targetPiece = pieceAtSquare && pieceHighlightFilter(pieceAtSquare) ? pieceAtSquare : null;
         } else {
           squareHighlight.visible = false;
         }
