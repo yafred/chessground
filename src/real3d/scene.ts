@@ -83,6 +83,7 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   }
 
   function setAllowInteractionForColors(config: Config) {
+    console.log('Setting allow interaction for colors based on config:', config);
     if (config?.turnColor) {
       const isWhiteTurn = config.turnColor === 'white';
       const isMyTurn =
@@ -91,6 +92,7 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
         config.movable?.color === 'both';
       interactionController.setAllowWhiteInteraction(isWhiteTurn && isMyTurn);
       interactionController.setAllowBlackInteraction(!isWhiteTurn && isMyTurn);
+      console.log(`Turn color: ${config.turnColor}, isMyTurn: ${isMyTurn}, allowWhiteInteraction: ${isWhiteTurn && isMyTurn}, allowBlackInteraction: ${!isWhiteTurn && isMyTurn}`); 
     }
   }
 
