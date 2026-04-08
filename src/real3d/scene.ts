@@ -52,6 +52,16 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   light2.target.position.set(0, 0, 0);
   scene.add(light2);
 
+  function setOrientation(orientation: 'white' | 'black' | undefined) {
+    const side = orientation === 'black' ? -1 : 1;
+    camera.position.set(0, 15, 8 * side);
+    camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0);
+    controls.update();
+  }
+
+  setOrientation(config.orientation);
+
   // Resize event
   window.addEventListener('resize', () => {
     const { width, height } = getSceneRootSize();
@@ -73,12 +83,15 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
     hoverController,
   });
 
+  let allowedMoveDests = config.movable?.dests;
+
   if (config?.events?.move) {
     interactionController.setMoveAttemptCallback(uci => {
       const from = uci.slice(0, 2) as Key;
       const to = uci.slice(2, 4) as Key;
+      if (allowedMoveDests && !allowedMoveDests.get(from)?.includes(to)) return false;
       config.events?.move?.(from, to);
-      return true; // allow all moves for now
+      return true;
     });
   }
 
@@ -92,7 +105,9 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
         config.movable?.color === 'both';
       interactionController.setAllowWhiteInteraction(isWhiteTurn && isMyTurn);
       interactionController.setAllowBlackInteraction(!isWhiteTurn && isMyTurn);
-      console.log(`Turn color: ${config.turnColor}, isMyTurn: ${isMyTurn}, allowWhiteInteraction: ${isWhiteTurn && isMyTurn}, allowBlackInteraction: ${!isWhiteTurn && isMyTurn}`); 
+      console.log(
+        `Turn color: ${config.turnColor}, isMyTurn: ${isMyTurn}, allowWhiteInteraction: ${isWhiteTurn && isMyTurn}, allowBlackInteraction: ${!isWhiteTurn && isMyTurn}`,
+      );
     }
   }
 
@@ -121,6 +136,7 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
 
     fenToScene(config?.fen || defaultFen, scene, pieces, materials);
     interactionController.setLastMoveSquares(config?.lastMove);
+
     scene.visible = true;
   });
 
@@ -152,6 +168,14 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
 
       if (config.fen) {
         fenToScene(config.fen, scene, pieces, materials);
+      }
+
+      if ('movable' in config) {
+        allowedMoveDests = config.movable?.dests;
+      }
+
+      if ('orientation' in config) {
+        setOrientation(config.orientation);
       }
 
       setAllowInteractionForColors(config);
