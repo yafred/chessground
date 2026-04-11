@@ -22,6 +22,7 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
 
   const sceneAssetUrl = config.real3D!.sceneAssetUrl; // config.real3D is the reason we are here.
   const defaultFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+  let currentOrientation: 'white' | 'black' | undefined = config.orientation;
 
   // Camera
   const { width: initialWidth, height: initialHeight } = getSceneRootSize();
@@ -53,10 +54,11 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   scene.add(light2);
 
   function setOrientation(orientation: 'white' | 'black' | undefined) {
+    currentOrientation = orientation;
     const side = orientation === 'black' ? -1 : 1;
     camera.position.set(0, 15, 8 * side);
-    camera.updateProjectionMatrix();
     controls.target.set(0, 0, 0);
+    camera.updateProjectionMatrix();
     controls.update();
   }
 
@@ -174,7 +176,7 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
         allowedMoveDests = config.movable?.dests;
       }
 
-      if ('orientation' in config) {
+      if ('orientation' in config && config.orientation && config.orientation !== currentOrientation) {
         setOrientation(config.orientation);
       }
 
