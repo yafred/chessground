@@ -23,6 +23,7 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   const sceneAssetUrl = config.real3D!.sceneAssetUrl; // config.real3D is the reason we are here.
   const defaultFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
   let currentOrientation: 'white' | 'black' | undefined = config.orientation;
+  let isViewOnly = !!config.viewOnly;
 
   // Camera
   const { width: initialWidth, height: initialHeight } = getSceneRootSize();
@@ -98,6 +99,13 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   }
 
   function setAllowInteractionForColors(config: Config) {
+    interactionController.setInteractionEnabled(!isViewOnly);
+    if (isViewOnly) {
+      interactionController.setAllowWhiteInteraction(false);
+      interactionController.setAllowBlackInteraction(false);
+      return;
+    }
+
     console.log('Setting allow interaction for colors based on config:', config);
     if (config?.turnColor) {
       const isWhiteTurn = config.turnColor === 'white';
@@ -174,6 +182,10 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
 
       if ('movable' in config) {
         allowedMoveDests = config.movable?.dests;
+      }
+
+      if ('viewOnly' in config) {
+        isViewOnly = !!config.viewOnly;
       }
 
       if ('orientation' in config && config.orientation && config.orientation !== currentOrientation) {

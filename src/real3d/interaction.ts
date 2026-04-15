@@ -32,6 +32,7 @@ export type PieceInteractionController = {
   setMoveAttemptCallback: (callback: (uci: string) => boolean) => void; // Set callback for validating user moves
   setAllowWhiteInteraction: (allow: boolean) => void;
   setAllowBlackInteraction: (allow: boolean) => void;
+  setInteractionEnabled: (enabled: boolean) => void;
 };
 
 export function setupPieceInteraction({
@@ -86,6 +87,7 @@ export function setupPieceInteraction({
   let onMoveAttempt: ((uci: string) => boolean) | undefined = undefined;
   let allowWhiteInteraction = initialAllowWhiteInteraction;
   let allowBlackInteraction = initialAllowBlackInteraction;
+  let interactionEnabled = true;
 
   function getPieceMeshFromObject(object: THREE.Object3D | null): THREE.Mesh | null {
     let current: THREE.Object3D | null = object;
@@ -279,6 +281,28 @@ export function setupPieceInteraction({
     onMoveAttempt = callback;
   }
 
+  function setInteractionEnabled(enabled: boolean) {
+    interactionEnabled = enabled;
+    if (!interactionEnabled) {
+      if (dragState) {
+        dragState.piece.position.copy(dragState.startPosition);
+        dragState.piece.position.y = dragState.startPosition.y;
+        hoverController.setDraggedPiece(null);
+        hoverController.setIgnoredPiece(null);
+        if (renderer.domElement.hasPointerCapture(dragState.pointerId)) {
+          renderer.domElement.releasePointerCapture(dragState.pointerId);
+        }
+        dragState = null;
+      }
+      clearSelection();
+      hoverController.setEnabled(false);
+      controls.enabled = true;
+      return;
+    }
+
+    hoverController.setEnabled(true);
+  }
+
   function setAllowWhiteInteraction(allow: boolean) {
     allowWhiteInteraction = allow;
     hoverController.setPieceHighlightFilter(canInteractWithPiece);
@@ -455,6 +479,10 @@ export function setupPieceInteraction({
   renderer.domElement.addEventListener(
     'pointerdown',
     event => {
+      if (!interactionEnabled) {
+        return;
+      }
+
       if (event.button !== 0) {
         return;
       }
@@ -511,6 +539,10 @@ export function setupPieceInteraction({
   );
 
   renderer.domElement.addEventListener('pointermove', event => {
+    if (!interactionEnabled) {
+      return;
+    }
+
     if (!dragState || event.pointerId !== dragState.pointerId) {
       return;
     }
@@ -536,6 +568,10 @@ export function setupPieceInteraction({
   });
 
   renderer.domElement.addEventListener('pointerup', event => {
+    if (!interactionEnabled) {
+      return;
+    }
+
     if (dragState && event.pointerId === dragState.pointerId) {
       finishDrag(event);
       return;
@@ -545,6 +581,10 @@ export function setupPieceInteraction({
   });
 
   renderer.domElement.addEventListener('pointercancel', event => {
+    if (!interactionEnabled) {
+      return;
+    }
+
     finishDrag(event);
   });
 
@@ -561,6 +601,10 @@ export function setupPieceInteraction({
   });
 
   controls.addEventListener('start', () => {
+    if (!interactionEnabled) {
+      return;
+    }
+
     if (activeMouseButton === 0) {
       hoverController.setEnabled(false);
       hoverDisabledForOrbit = true;
@@ -569,6 +613,10 @@ export function setupPieceInteraction({
 
   controls.addEventListener('end', () => {
     activeMouseButton = null;
+    if (!interactionEnabled) {
+      return;
+    }
+
     if (hoverDisabledForOrbit) {
       hoverController.setEnabled(true);
       hoverDisabledForOrbit = false;
@@ -582,5 +630,6 @@ export function setupPieceInteraction({
     setMoveAttemptCallback,
     setAllowWhiteInteraction,
     setAllowBlackInteraction,
+    setInteractionEnabled,
   };
 }
