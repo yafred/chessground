@@ -33,6 +33,7 @@ export function createViewStatePersistence({
       const rawState = window.localStorage.getItem(storageKey);
       if (!rawState) return undefined;
       const parsedState = JSON.parse(rawState) as Partial<PersistedViewState>;
+      console.log('Restoring view state', parsedState);
 
       if (
         !isFiniteTuple3(parsedState.cameraPosition) ||
@@ -60,6 +61,7 @@ export function createViewStatePersistence({
         cameraZoom: camera.zoom,
         controlsTarget: [controls.target.x, controls.target.y, controls.target.z],
       };
+      console.log('Persisting view state', state);
       window.localStorage.setItem(storageKey, JSON.stringify(state));
     } catch {
       // Ignore persistence errors (private mode, quota, or disabled storage).
