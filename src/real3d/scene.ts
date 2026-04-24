@@ -57,7 +57,7 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   const a1Marker = new THREE.Mesh(
     new THREE.CircleGeometry(0.08, 20),
     new THREE.MeshBasicMaterial({
-      color: 0xff_ff_ff,
+      color: 0xf0_f0_f0,
       depthWrite: false,
       side: THREE.DoubleSide,
     }),
