@@ -66,14 +66,11 @@ export function createViewStatePersistence({
     }
   }
 
-  let persistQueued = false;
+  let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
   const schedulePersist = () => {
-    if (persistQueued) return;
-    persistQueued = true;
-    requestAnimationFrame(() => {
-      persistQueued = false;
-      persist();
-    });
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(persist, 300);
   };
 
   function restore(): boolean {
