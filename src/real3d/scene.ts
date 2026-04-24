@@ -83,10 +83,6 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
     controls,
   });
 
-  if (!viewStatePersistence.restore()) {
-    setOrientation(config.orientation);
-  }
-
   controls.addEventListener('change', viewStatePersistence.schedulePersist);
 
   // Resize event
