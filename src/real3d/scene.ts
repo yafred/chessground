@@ -68,7 +68,9 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   a1Marker.renderOrder = 7;
   scene.add(a1Marker);
 
-  function setView() {
+ function setOrientation(orientation: 'white' | 'black' | undefined) {
+    currentOrientation = orientation;
+    const side = orientation === 'black' ? -1 : 1;
     camera.position.set(0, 15, 8 * side);
     controls.target.set(0, 0, 0);
     camera.updateProjectionMatrix();
@@ -82,8 +84,8 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   });
 
   if (!viewStatePersistence.restore()) {
-    setView();
-  } 
+    setOrientation(config.orientation);
+  }
 
   controls.addEventListener('change', viewStatePersistence.schedulePersist);
 
