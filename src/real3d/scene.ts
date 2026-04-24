@@ -9,6 +9,7 @@ import type { Key } from '../types.js';
 import { fenToScene } from './fen.js';
 import { createPieceHoverController } from './hover.js';
 import { setupPieceInteraction } from './interaction.js';
+import { createViewStatePersistence } from './viewState.js';
 
 export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   // Scene setup
@@ -63,7 +64,17 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
     controls.update();
   }
 
-  setOrientation(config.orientation);
+  const viewStatePersistence = createViewStatePersistence({
+    sceneAssetUrl,
+    camera,
+    controls,
+  });
+
+  if (!viewStatePersistence.restore()) {
+    setOrientation(config.orientation);
+  }
+
+  controls.addEventListener('change', viewStatePersistence.schedulePersist);
 
   // Resize event
   window.addEventListener('resize', () => {
@@ -276,8 +287,11 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
     },
 
     destroy() {
+      controls.removeEventListener('change', viewStatePersistence.schedulePersist);
+      viewStatePersistence.persist();
+
       console.warn(
-        'Destroying the 3D scene is not implemented. You may want to remove the canvas from the DOM instead.',
+        'Destroying the 3D scene is not fully implemented. You may want to remove the canvas from the DOM instead.',
       );
     },
     redrawAll() {
