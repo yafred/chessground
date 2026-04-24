@@ -54,6 +54,19 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   light2.target.position.set(0, 0, 0);
   scene.add(light2);
 
+  const a1Marker = new THREE.Mesh(
+    new THREE.CircleGeometry(0.08, 20),
+    new THREE.MeshBasicMaterial({
+      color: 0xff_ff_ff,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    }),
+  );
+  a1Marker.rotation.x = -Math.PI / 2;
+  a1Marker.position.set(-3.87, 0.02, 3.87);
+  a1Marker.renderOrder = 7;
+  scene.add(a1Marker);
+
   function setOrientation(orientation: 'white' | 'black' | undefined) {
     currentOrientation = orientation;
     const side = orientation === 'black' ? -1 : 1;
