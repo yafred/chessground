@@ -1,0 +1,96 @@
+import type * as THREE from 'three';
+import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+interface PersistedViewState {
+  cameraPosition: [number, number, number];
+  cameraZoom: number;
+  controlsTarget: [number, number, number];
+}
+
+interface CreateViewStatePersistenceOpts {
+  sceneAssetUrl: string;
+  camera: THREE.PerspectiveCamera;
+  controls: OrbitControls;
+}
+
+function isFiniteTuple3(value: unknown): value is [number, number, number] {
+  return (
+    Array.isArray(value) &&
+    value.length === 3 &&
+    value.every(item => typeof item === 'number' && Number.isFinite(item))
+  );
+}
+
+export function createViewStatePersistence({
+  sceneAssetUrl,
+  camera,
+  controls,
+}: CreateViewStatePersistenceOpts) {
+  const storageKey = `chessground:real3d:view:${sceneAssetUrl}`;
+
+  function getStoredViewState(): PersistedViewState | undefined {
+    try {
+      const rawState = window.localStorage.getItem(storageKey);
+      if (!rawState) return undefined;
+      const parsedState = JSON.parse(rawState) as Partial<PersistedViewState>;
+
+      if (
+        !isFiniteTuple3(parsedState.cameraPosition) ||
+        !isFiniteTuple3(parsedState.controlsTarget) ||
+        typeof parsedState.cameraZoom !== 'number' ||
+        !Number.isFinite(parsedState.cameraZoom)
+      ) {
+        return undefined;
+      }
+
+      return {
+        cameraPosition: parsedState.cameraPosition,
+        cameraZoom: parsedState.cameraZoom,
+        controlsTarget: parsedState.controlsTarget,
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
+  function persist() {
+    try {
+      const state: PersistedViewState = {
+        cameraPosition: [camera.position.x, camera.position.y, camera.position.z],
+        cameraZoom: camera.zoom,
+        controlsTarget: [controls.target.x, controls.target.y, controls.target.z],
+      };
+      window.localStorage.setItem(storageKey, JSON.stringify(state));
+    } catch {
+      // Ignore persistence errors (private mode, quota, or disabled storage).
+    }
+  }
+
+  let persistQueued = false;
+  const schedulePersist = () => {
+    if (persistQueued) return;
+    persistQueued = true;
+    requestAnimationFrame(() => {
+      persistQueued = false;
+      persist();
+    });
+  };
+
+  function restore(): boolean {
+    const storedState = getStoredViewState();
+    if (!storedState) return false;
+
+    camera.position.set(...storedState.cameraPosition);
+    camera.zoom = storedState.cameraZoom;
+    controls.target.set(...storedState.controlsTarget);
+    camera.updateProjectionMatrix();
+    controls.update();
+    return true;
+  }
+
+  return {
+    persist,
+    schedulePersist,
+    restore,
+  };
+}
