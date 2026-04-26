@@ -5,12 +5,15 @@ interface PersistedViewState {
   cameraPosition: [number, number, number];
   cameraZoom: number;
   controlsTarget: [number, number, number];
+  orientation?: 'white' | 'black';
 }
 
 interface CreateViewStatePersistenceOpts {
   sceneAssetUrl: string;
   camera: THREE.PerspectiveCamera;
   controls: OrbitControls;
+  getOrientation?: () => 'white' | 'black' | undefined;
+  setOrientation?: (orientation: 'white' | 'black' | undefined) => void;
 }
 
 function isFiniteTuple3(value: unknown): value is [number, number, number] {
@@ -25,6 +28,8 @@ export function createViewStatePersistence({
   sceneAssetUrl,
   camera,
   controls,
+  getOrientation,
+  setOrientation,
 }: CreateViewStatePersistenceOpts) {
   const storageKey = `chessground:real3d:view:${sceneAssetUrl}`;
 
@@ -47,6 +52,7 @@ export function createViewStatePersistence({
         cameraPosition: parsedState.cameraPosition,
         cameraZoom: parsedState.cameraZoom,
         controlsTarget: parsedState.controlsTarget,
+        orientation: parsedState.orientation === 'white' || parsedState.orientation === 'black' ? parsedState.orientation : undefined,
       };
     } catch {
       return undefined;
@@ -59,6 +65,7 @@ export function createViewStatePersistence({
         cameraPosition: [camera.position.x, camera.position.y, camera.position.z],
         cameraZoom: camera.zoom,
         controlsTarget: [controls.target.x, controls.target.y, controls.target.z],
+        orientation: getOrientation?.(),
       };
       window.localStorage.setItem(storageKey, JSON.stringify(state));
     } catch {
@@ -77,6 +84,7 @@ export function createViewStatePersistence({
     const storedState = getStoredViewState();
     if (!storedState) return false;
 
+    setOrientation?.(storedState.orientation);
     camera.position.set(...storedState.cameraPosition);
     camera.zoom = storedState.cameraZoom;
     controls.target.set(...storedState.controlsTarget);
