@@ -42,6 +42,10 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
+  // Only allow horizontal/X-axis rotation.
+  const lockedAzimuthAngle = controls.getAzimuthalAngle();
+  controls.minAzimuthAngle = lockedAzimuthAngle;
+  controls.maxAzimuthAngle = lockedAzimuthAngle;
 
   // Lighting
   const ambientLight = new THREE.HemisphereLight(0xff_ff_ff, 0x44_44_44, 2);
