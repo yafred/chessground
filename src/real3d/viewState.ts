@@ -87,12 +87,12 @@ export function createViewStatePersistence({
     const storedState = getStoredViewState();
     if (!storedState) return false;
 
-    setOrientation?.(storedState.orientation);
     camera.position.set(...storedState.cameraPosition);
     camera.zoom = storedState.cameraZoom;
     controls.target.set(...storedState.controlsTarget);
     camera.updateProjectionMatrix();
     controls.update();
+    setOrientation?.(storedState.orientation);
     return true;
   }
 

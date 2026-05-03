@@ -23,7 +23,7 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
 
   const sceneAssetUrl = config.real3D!.sceneAssetUrl; // config.real3D is the reason we are here.
   const defaultFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
-  let currentOrientation: 'white' | 'black' | undefined = config.orientation;
+  let currentOrientation: 'white' | 'black' | undefined;
   let isViewOnly = !!config.viewOnly;
 
   // Camera
@@ -43,9 +43,12 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
   // Only allow horizontal/X-axis rotation.
-  const lockedAzimuthAngle = controls.getAzimuthalAngle();
-  controls.minAzimuthAngle = lockedAzimuthAngle;
-  controls.maxAzimuthAngle = lockedAzimuthAngle;
+  const whiteAzimuthAngle = controls.getAzimuthalAngle();
+  const setLockedAzimuth = (azimuth: number) => {
+    controls.minAzimuthAngle = azimuth;
+    controls.maxAzimuthAngle = azimuth;
+  };
+  setLockedAzimuth(whiteAzimuthAngle);
 
   // Lighting
   const ambientLight = new THREE.HemisphereLight(0xff_ff_ff, 0x44_44_44, 2);
@@ -74,8 +77,18 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
 
   function setOrientation(orientation: 'white' | 'black' | undefined) {
     if (!orientation || orientation === currentOrientation) return;
+    const azimuth = orientation === 'white' ? whiteAzimuthAngle : whiteAzimuthAngle + Math.PI;
+    const normalizedAzimuth = THREE.MathUtils.euclideanModulo(azimuth + Math.PI, Math.PI * 2) - Math.PI;
+
+    setLockedAzimuth(normalizedAzimuth);
+
+    const offset = camera.position.clone().sub(controls.target);
+    const spherical = new THREE.Spherical().setFromVector3(offset);
+    spherical.theta = normalizedAzimuth;
+    offset.setFromSpherical(spherical);
+    camera.position.copy(controls.target).add(offset);
+
     currentOrientation = orientation;
-    camera.position.set(camera.position.x, camera.position.y, camera.position.z * -1);
     camera.updateProjectionMatrix();
     controls.update();
     viewStatePersistence.schedulePersist();
