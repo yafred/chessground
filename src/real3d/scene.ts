@@ -72,7 +72,7 @@ export function start3D(sceneRoot: HTMLElement, config: Config): Api {
   a1Marker.renderOrder = 7;
   scene.add(a1Marker);
 
- function setOrientation(orientation: 'white' | 'black' | undefined) {
+  function setOrientation(orientation: 'white' | 'black' | undefined) {
     if (!orientation || orientation === currentOrientation) return;
     currentOrientation = orientation;
     camera.position.set(camera.position.x, camera.position.y, camera.position.z * -1);

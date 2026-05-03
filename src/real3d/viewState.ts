@@ -52,7 +52,10 @@ export function createViewStatePersistence({
         cameraPosition: parsedState.cameraPosition,
         cameraZoom: parsedState.cameraZoom,
         controlsTarget: parsedState.controlsTarget,
-        orientation: parsedState.orientation === 'white' || parsedState.orientation === 'black' ? parsedState.orientation : undefined,
+        orientation:
+          parsedState.orientation === 'white' || parsedState.orientation === 'black'
+            ? parsedState.orientation
+            : undefined,
       };
     } catch {
       return undefined;
